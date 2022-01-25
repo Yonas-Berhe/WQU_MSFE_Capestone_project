@@ -1,0 +1,262 @@
+---
+title: "SVAR analysis for Colombia and Chile"
+output: html_notebook
+---
+
+# SVAR analysis for Colombia
+
+```{r}
+library(vars)
+```
+
+```{r}
+# importing data
+
+dat <- read.csv(file = "data_colombia.csv")
+```
+
+```{r}
+# converting to time series
+
+oil <- ts(log(dat$Oil_price), start = c(2000, 1), freq = 365)  # oil prices
+gdppc <- ts(log(dat$GDPPC), start = c(2000, 1), freq = 365)  # output
+cpi <- ts(diff(log(dat$CPI)), start = c(2000, 1), freq = 365)  # consumer inflation
+ir <- ts(diff(log(dat$IR)), start = c(2000, 1), freq = 365)  # interest rate
+prtdx <- ts(diff(log(dat$PrIdx)), start = c(2000, 1), freq = 365)  # production index
+
+```
+
+
+
+```{r}
+
+Col_data <- cbind(oil, gdppc, cpi, ir, prtdx)
+colnames(Col_data) <- c('Oil_price', 'GDPPC', 'CPI', 'IR', 'PrIdx')
+Col_data <- data.frame(Col_data)
+
+```
+
+
+```{r}
+Col_data <- Col_data                                              
+  for(i in 1:ncol(Col_data)) {                                   
+  Col_data[ , i][is.na(Col_data[ , i])] <- mean(Col_data[ , i], na.rm = TRUE)
+  }
+Col_data
+```
+
+
+
+```{r}
+plot.ts(Col_data)
+```
+
+
+```{r}
+# select lag order
+
+lagselect <- VARselect(Col_data, lag.max = 5, type = "both")
+lagselect$selection
+lagselect$criteria
+
+```
+
+
+
+```{r}
+
+# Estimate structural coefficients
+
+a <- diag(1, 5)
+a[lower.tri(a)] <- NA
+
+a
+```
+
+
+
+```{r}
+# Estimate reduced form VAR
+
+Model1 <- VAR(Col_data, p = 3, season = NULL, exog = NULL, type = "const") 
+
+Model1
+```
+
+
+```{r}
+# estimating svar model
+
+SVARMod1 <- SVAR(Model1, Amat = a , Bmat = NULL, hessian = TRUE, estmethod = c("scoring", "direct"))
+
+summary(SVARMod1)
+```
+
+
+
+```{r}
+
+SVARog <- irf(SVARMod1, impulse = "Oil_price", response = "GDPPC")
+plot(SVARog)
+SVARinf <- irf(SVARMod1, impulse = "Oil_price", response = "CPI")
+plot(SVARinf)
+SVARrrp <- irf(SVARMod1, impulse = "Oil_price", response = "IR")
+plot(SVARrrp)
+SVARpridx <- irf(SVARMod1, impulse = "Oil_price", response = "PrIdx")
+plot(SVARpridx)
+
+```
+
+
+
+
+```{r}
+SVARfevd <- fevd(SVARMod1, n.ahead = 20)
+SVARfevd
+plot(SVARfevd)
+```
+
+
+
+
+###################################################################
+
+
+
+
+# SVAR analysis for Chile
+
+
+```{r}
+# importing data
+
+dat_chile <- read.csv(file = "data_chile.csv")
+```
+
+```{r}
+# converting to time series
+
+oil <- ts(log(dat_chile$Oil_price), start = c(2000, 1), freq = 365)  # oil prices
+gdppc <- ts(log(dat_chile$GDPPC), start = c(2000, 1), freq = 365)  # output
+cpi <- ts(diff(log(dat_chile$CPI)), start = c(2000, 1), freq = 365)  # consumer inflation
+ir <- ts(diff(log(dat_chile$IR)), start = c(2000, 1), freq = 365)  # interest rate
+prtdx <- ts(diff(log(dat_chile$PrIdx)), start = c(2000, 1), freq = 365)  # production index
+
+```
+
+
+
+```{r}
+# combining data sets
+
+Chile_data <- cbind(oil, gdppc, cpi, ir, prtdx)
+colnames(Chile_data) <- c('Oil_price', 'GDPPC', 'CPI', 'IR', 'PrIdx')
+Chile_data <- data.frame(Chile_data)
+
+```
+
+
+```{r}
+# replacing nas with column averages
+
+Chile_data <- Chile_data                                              
+  for(i in 1:ncol(Chile_data)) {                                   
+  Chile_data[ , i][is.na(Chile_data[ , i])] <- mean(Chile_data[ , i], na.rm = TRUE)
+  }
+Chile_data
+```
+
+
+
+```{r}
+plot.ts(Chile_data)
+```
+
+
+```{r}
+# select lag order
+
+lagselect <- VARselect(Chile_data, lag.max = 5, type = "both")
+lagselect$selection
+lagselect$criteria
+
+```
+
+
+
+```{r}
+# Estimate reduced form VAR for chile
+
+Model2 <- VAR(Chile_data, p = 3, season = NULL, exog = NULL, type = "const") 
+
+Model2
+```
+
+
+
+
+```{r}
+# estimating svar model
+
+SVARMod2 <- SVAR(Model2, Amat = a , Bmat = NULL, hessian = TRUE, estmethod = c("scoring", "direct"))
+
+summary(SVARMod2)
+```
+
+
+```{r}
+SVARog <- irf(SVARMod2, impulse = "Oil_price", response = "GDPPC")
+plot(SVARog)
+SVARinf <- irf(SVARMod2, impulse = "Oil_price", response = "CPI")
+plot(SVARinf)
+SVARrrp <- irf(SVARMod2, impulse = "Oil_price", response = "IR")
+plot(SVARrrp)
+SVARpridx <- irf(SVARMod2, impulse = "Oil_price", response = "PrIdx")
+plot(SVARpridx)
+```
+
+
+
+
+```{r}
+SVARfevd <- fevd(SVARMod2, n.ahead = 20)
+SVARfevd
+plot(SVARfevd)
+```
+
+
+
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
