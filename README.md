@@ -52,7 +52,9 @@ These liabraries can be installed through pip install inside the notebook.
 ### Structural vector autoregression (SVAR) is implemented in R-Studio
 
 install.package(vars)
+
 library(vars)
+
 vars: VAR Modelling
 
 https://cran.r-project.org/web/packages/vars/index.html
